@@ -8,9 +8,10 @@ and stores them on that device, so saved chapters open without internet.
 
 ## Using it
 
-- **Mac:** double-click `index.html` and it opens in Safari.
-- **iPad:** Safari on iPad can't run a local HTML file, so the folder needs a web address
-  (e.g. GitHub Pages). Open that address once while online, then
+Live at **https://kwakyu.github.io/rezero-reader/** (GitHub Pages, updates on every push to `main`).
+
+- **Mac:** double-click `index.html` (or use the address above) and it opens in Safari.
+- **iPad:** open the address above in Safari once while online, then
   **Share → Add to Home Screen**. Open it from the Home Screen icon from then on.
   The Home Screen app keeps its own storage, so its saved chapters and reading
   position aren't cleared the way Safari can clear unused website data.
