@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Re:Zero Reader</title>
+<meta name="description" content="Offline reader for the Re:Zero web novel translations by Witch Cult Translations.">
+<meta name="theme-color" content="#faf8f4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Re:Zero">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<script>
+  // Set the theme before first paint so there's no flash.
+  try {
+    var s = JSON.parse(localStorage.getItem('rz.settings') || '{}'), t = s.theme || 'auto';
+    if (t === 'auto') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+</script>
+<style>
+:root {
+  --fs: 19px; --lh: 1.7; --measure: 680px;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --font: var(--serif);
+  --bar-h: 52px;
+}
+html[data-theme="light"] {
+  --bg: #faf8f4; --surface: #ffffff; --soft: #f0ede6; --line: #e6e1d7;
+  --text: #1e1c19; --muted: #79746a; --accent: #5b47c4; --accent-ink: #ffffff;
+  --sel: rgba(91, 71, 196, .11); --shadow: 0 1px 2px rgba(30, 28, 25, .04), 0 8px 24px rgba(30, 28, 25, .06);
+  color-scheme: light;
+}
+html[data-theme="sepia"] {
+  --bg: #f3ead6; --surface: #f9f2e2; --soft: #e9dec5; --line: #ddcfae;
+  --text: #3b2e1e; --muted: #7f6c52; --accent: #8d5524; --accent-ink: #ffffff;
+  --sel: rgba(141, 85, 36, .13); --shadow: 0 1px 2px rgba(59, 46, 30, .05), 0 8px 24px rgba(59, 46, 30, .07);
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  --bg: #131316; --surface: #1b1b20; --soft: #25252c; --line: #2c2c34;
+  --text: #e6e2d9; --muted: #9b978e; --accent: #b3a5ff; --accent-ink: #15131f;
+  --sel: rgba(179, 165, 255, .16); --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+  font: 16px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+  transition: background-color .2s, color .2s;
+}
+a { color: inherit; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: var(--sel); }
+.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- top bar ---------- */
+#bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+  height: calc(var(--bar-h) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) max(6px, env(safe-area-inset-right)) 0 max(6px, env(safe-area-inset-left));
+  display: flex; align-items: center; gap: 2px;
+  background: var(--bg); background: color-mix(in srgb, var(--bg) 86%, transparent);
+  -webkit-backdrop-filter: saturate(1.5) blur(16px); backdrop-filter: saturate(1.5) blur(16px);
+  border-bottom: 1px solid var(--line);
+  transition: transform .28s ease;
+}
+#bar.hide { transform: translateY(-100%); }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; flex: none; }
+@media (hover: hover) { .icon-btn:hover { background: var(--soft); } }
+.aa { font: 600 17px/1 var(--serif); letter-spacing: -.02em; }
+#barTitle { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 4px; }
+#barTitle .t1 { font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#barTitle .t2 { font-size: 14.5px; font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#barPct { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; padding-right: 2px; }
+#offline { font-size: 11px; font-weight: 700; letter-spacing: .03em; padding: 3px 8px; border-radius: 99px; background: var(--soft); color: var(--muted); margin: 0 4px; }
+#progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+#view { padding-top: calc(var(--bar-h) + env(safe-area-inset-top)); }
+
+/* ---------- reader ---------- */
+.chapter {
+  max-width: calc(var(--measure) + 48px); margin: 0 auto;
+  padding: 40px max(24px, env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+}
+.ch-head { text-align: center; margin: 4px 0 40px; }
+.eyebrow { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+.kicker { font: italic 400 calc(var(--fs) * .95)/1.3 var(--font); color: var(--accent); margin: 0 0 6px; }
+.ch-head h1 { font: 600 calc(var(--fs) * 1.6)/1.2 var(--font); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.content { font-family: var(--font); font-size: var(--fs); line-height: var(--lh); overflow-wrap: break-word; hanging-punctuation: first; }
+.content p { margin: 0 0 .9em; }
+.content .gap { margin: 0; height: .5em; }
+.content .c { text-align: center; }
+.content .r { text-align: right; }
+.content .sep { text-align: center; color: var(--muted); letter-spacing: .3em; font-size: .72em; margin: 2.2em 0; }
+.content img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 8px; }
+.content img.gone { height: 0 !important; visibility: hidden; }
+.content a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.content ul, .content ol { padding-left: 1.4em; margin: 0 0 .9em; }
+.content li { margin: .15em 0; }
+.content blockquote { margin: 0 0 .9em; padding-left: 1em; border-left: 3px solid var(--line); color: var(--muted); }
+.content hr { border: 0; border-top: 1px solid var(--line); margin: 2em auto; width: 40%; }
+.content h1, .content h2, .content h3, .content h4, .content h5, .content h6 { font-size: 1.1em; line-height: 1.3; margin: 1.4em 0 .6em; }
+.content figure { margin: 0 0 .9em; }
+.content figcaption { font-size: .8em; color: var(--muted); text-align: center; margin-top: .4em; }
+.content table { border-collapse: collapse; margin: 0 0 .9em; font-size: .9em; }
+.content td, .content th { border: 1px solid var(--line); padding: .3em .6em; }
+
+.chapnav { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 64px 0 20px; }
+.nav-btn {
+  display: flex; flex-direction: column; justify-content: center; gap: 3px; min-height: 68px;
+  padding: 14px 16px; border-radius: 14px; text-decoration: none;
+  border: 1px solid var(--line); background: var(--surface);
+}
+.nav-btn small { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.nav-btn span { font-weight: 600; font-size: 15px; line-height: 1.3; }
+.nav-btn.next { grid-column: 2; text-align: right; background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.nav-btn.next small { color: inherit; opacity: .78; }
+.source { text-align: center; font-size: 12.5px; color: var(--muted); margin: 0; }
+.source a { color: var(--accent); }
+
+.status { color: var(--muted); text-align: center; font: 15px/1.5 var(--sans); padding: 48px 0; margin: 0; }
+.notice { border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 20px 22px; font: 15px/1.55 var(--sans); }
+.notice b { display: block; font-size: 16px; margin-bottom: 4px; }
+.notice p { margin: 0 0 14px; color: var(--muted); }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px; text-decoration: none; }
+.btn.ghost { background: var(--soft); color: var(--text); }
+
+/* ---------- home ---------- */
+.home { max-width: 780px; margin: 0 auto; padding: 36px max(20px, env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); }
+.hero h1 { font: 600 46px/1.05 var(--serif); margin: 0 0 12px; letter-spacing: -.02em; }
+.lede { color: var(--muted); margin: 0; max-width: 54ch; font-size: 15.5px; }
+.lede a { color: var(--accent); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+.continue { display: block; margin: 28px 0 6px; padding: 20px 22px; text-decoration: none; }
+.continue .eyebrow { color: var(--accent); margin-bottom: 8px; }
+.cont-title { display: block; font: 600 23px/1.25 var(--serif); }
+.cont-meta { display: block; font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+.cont-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.cont-row .meter { flex: 1; margin: 0; }
+.cont-pct { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cont-go { margin-left: auto; }
+.section-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 34px 2px 12px; font-weight: 700; }
+.arcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 12px; }
+.arc { display: flex; flex-direction: column; }
+.arc-main { flex: 1; display: flex; flex-direction: column; gap: 3px; padding: 16px 18px 10px; text-decoration: none; }
+.arc-num { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.arc-name { font: 600 19px/1.25 var(--serif); }
+.meter { display: block; height: 4px; border-radius: 4px; background: var(--soft); overflow: hidden; margin: 10px 0 4px; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.arc-meta { font-size: 13px; color: var(--muted); }
+.btn-dl {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin: 0 12px 12px; padding: 9px 12px; border-radius: 10px;
+  background: var(--soft); font-size: 13.5px; font-weight: 600; white-space: nowrap;
+}
+.btn-dl .i { width: 17px; height: 17px; }
+.btn-dl:disabled { color: var(--muted); background: transparent; }
+.btn-dl.busy { color: var(--accent); }
+.home-foot { margin-top: 40px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.home-foot a { color: var(--accent); }
+.link { color: var(--accent); font-weight: 600; font-size: inherit; }
+.link.danger { color: #c2410c; align-self: flex-start; }
+
+/* ---------- chapter drawer ---------- */
+#scrim { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .38); opacity: 0; pointer-events: none; transition: opacity .25s; }
+body.drawer-open #scrim { opacity: 1; pointer-events: auto; }
+body.settings-open #scrim { pointer-events: auto; }
+#drawer {
+  position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; width: min(400px, 100%);
+  display: flex; flex-direction: column;
+  background: var(--surface); border-right: 1px solid var(--line);
+  padding: env(safe-area-inset-top) 0 0 env(safe-area-inset-left);
+  transform: translateX(-102%); visibility: hidden;
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), visibility .3s;
+}
+body.drawer-open #drawer { transform: none; visibility: visible; }
+.dr-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 2px 18px; }
+.dr-head h2 { font: 600 21px/1 var(--serif); margin: 0; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 12px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--soft); font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.chip.on { background: var(--accent); color: var(--accent-ink); }
+.dr-tools { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 12px; border-bottom: 1px solid var(--line); }
+.search {
+  width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); font: 16px/1.3 var(--sans); -webkit-appearance: none; appearance: none;
+}
+.dr-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dr-info b { display: block; font-size: 14.5px; }
+.dr-info span { font-size: 12.5px; color: var(--muted); }
+.dr-info .btn-dl { margin: 0; flex: none; }
+#drList { flex: 1; position: relative; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 0 0 calc(24px + env(safe-area-inset-bottom)); }
+.sec h3 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 14px 18px 6px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+.ch-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 13px; text-decoration: none; font-size: 14.5px; line-height: 1.35; border-left: 3px solid transparent; }
+@media (hover: hover) { .ch-item:hover { background: var(--soft); } }
+.ch-item.cur { background: var(--sel); border-left-color: var(--accent); font-weight: 600; }
+.ch-item.done .ch-name { color: var(--muted); }
+.ch-dot { width: 18px; display: grid; place-items: center; color: var(--accent); flex: none; }
+.ch-dot .i { width: 16px; height: 16px; stroke-width: 2.4; }
+.ch-name { flex: 1; min-width: 0; }
+.ch-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ch-meta .i { width: 16px; height: 16px; opacity: .55; }
+
+/* ---------- display settings ---------- */
+#settings {
+  position: fixed; z-index: 45; top: calc(var(--bar-h) + env(safe-area-inset-top) + 8px); right: max(10px, env(safe-area-inset-right));
+  width: min(370px, calc(100% - 20px)); padding: 10px 16px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 50px rgba(0, 0, 0, .2);
+  opacity: 0; transform: translateY(-6px) scale(.98); transform-origin: top right; pointer-events: none; visibility: hidden;
+  transition: opacity .18s, transform .18s, visibility .18s;
+}
+body.settings-open #settings { opacity: 1; transform: none; pointer-events: auto; visibility: visible; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; }
+.set-row > span { font-size: 13.5px; color: var(--muted); }
+.seg { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--soft); }
+.seg button { padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, .14); }
+.seg .serif { font-family: var(--serif); font-size: 14px; }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper button { width: 42px; height: 34px; border-radius: 9px; background: var(--soft); font-weight: 700; }
+.stepper output { min-width: 30px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px; }
+.check { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; line-height: 1.4; padding-top: 12px; margin-top: 6px; border-top: 1px solid var(--line); cursor: pointer; }
+.check input { margin: 2px 0 0; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
+.check small { display: block; color: var(--muted); font-size: 12px; }
+
+#toast {
+  position: fixed; z-index: 60; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom));
+  max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 12px;
+  background: var(--text); color: var(--bg); font-size: 14px;
+  opacity: 0; transform: translate(-50%, 16px); pointer-events: none; transition: opacity .25s, transform .25s;
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 600px) {
+  .chapter { padding-top: 28px; }
+  .hero h1 { font-size: 38px; }
+  .chapnav { grid-template-columns: 1fr; }
+  .nav-btn.next { grid-column: auto; grid-row: 1; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body data-view="home">
+<header id="bar">
+  <button class="icon-btn" data-act="menu" aria-label="Chapters" title="Chapters">
+    <svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h11"/></svg>
+  </button>
+  <button class="icon-btn" data-act="home" aria-label="Library" title="Library">
+    <svg class="i" viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v15H6a2 2 0 0 0-2 2zm0 0A2 2 0 0 0 6 22h12v-4"/></svg>
+  </button>
+  <div id="barTitle"><span class="t1"></span><span class="t2">Re:Zero Reader</span></div>
+  <span id="offline" hidden>OFFLINE</span>
+  <span id="barPct"></span>
+  <button class="icon-btn" data-act="settings" aria-label="Display settings" title="Display settings"><span class="aa">Aa</span></button>
+  <div id="progress"></div>
+</header>
+
+<main id="view"><p class="status">Loading…</p></main>
+
+<div id="scrim" data-act="close"></div>
+
+<aside id="drawer" aria-label="Chapters" aria-hidden="true">
+  <div class="dr-head">
+    <h2>Chapters</h2>
+    <button class="icon-btn" data-act="close" aria-label="Close">
+      <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="chips" id="drChips"></div>
+  <div class="dr-tools">
+    <input class="search" id="drSearch" type="search" placeholder="Find a chapter…" autocomplete="off" aria-label="Find a chapter">
+    <div class="dr-info" id="drInfo"></div>
+  </div>
+  <div id="drList"></div>
+</aside>
+
+<div id="settings" role="dialog" aria-label="Display settings">
+  <div class="set-row"><span>Theme</span>
+    <div class="seg" data-key="theme"><button data-val="auto">Auto</button><button data-val="light">Light</button><button data-val="sepia">Sepia</button><button data-val="dark">Dark</button></div>
+  </div>
+  <div class="set-row"><span>Font</span>
+    <div class="seg" data-key="font"><button data-val="serif" class="serif">Serif</button><button data-val="sans">Sans</button></div>
+  </div>
+  <div class="set-row"><span>Text size</span>
+    <div class="stepper"><button data-act="size" data-d="-1" aria-label="Smaller text">A−</button><output id="sizeOut"></output><button data-act="size" data-d="1" aria-label="Larger text">A+</button></div>
+  </div>
+  <div class="set-row"><span>Line spacing</span>
+    <div class="seg" data-key="spacing"><button data-val="tight">Tight</button><button data-val="normal">Normal</button><button data-val="loose">Loose</button></div>
+  </div>
+  <div class="set-row"><span>Page width</span>
+    <div class="seg" data-key="width"><button data-val="narrow">Narrow</button><button data-val="normal">Normal</button><button data-val="wide">Wide</button></div>
+  </div>
+  <label class="check"><input type="checkbox" id="autoSave">
+    <span>Save the arc I'm reading for offline<small>Downloads the rest of the current arc in the background while you're online.</small></span>
+  </label>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<noscript><p class="status">This reader needs JavaScript.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+
+const SITE = 'https://witchculttranslation.com';
+const API = SITE + '/wp-json/wp/v2';
+const POST_FIELDS = '&_fields=id,slug,title,content,link,date,modified';
+const POST_RE = /^https?:\/\/(?:www\.)?witchculttranslation\.com\/\d{4}\/\d{2}\/\d{2}\/([^/?#]+)/i;
+const ARCS_TTL = 6 * 3600e3;   // re-check the site's chapter lists every 6 hours when online
+const PREFETCH = 3;            // chapters ahead to fetch right away
+const ANCHOR_Y = 76;           // px from the top of the viewport that counts as "where you are"
+
+const $ = (s, r = document) => r.querySelector(s);
+const enc = encodeURIComponent;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const decodeEntities = s => { const t = document.createElement('textarea'); t.innerHTML = s; return t.value; };
+const tidyText = s => s.replace(/\s+/g, ' ').trim();
+function normSlug(s) { try { s = decodeURIComponent(s); } catch (e) { } return s.toLowerCase().replace(/\/+$/, ''); }
+// "Arc 7, Chapter 62 – “Sparka”" and "Chapter 62: Sparka" both become "chapter62sparka"
+const titleKey = s => s.toLowerCase().replace(/^\s*arc\s*\d+\s*[,:\-–—]?\s*/, '').replace(/[^\p{L}\p{N}]+/gu, '');
+
+const ICON = {
+  check: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  cloud: '<svg class="i" viewBox="0 0 24 24" aria-label="Not saved offline"><path d="M7 18.5h10.5a4 4 0 0 0 .4-7.98A6 6 0 0 0 6.2 9.6 4.5 4.5 0 0 0 7 18.5z"/></svg>',
+  down: '<svg class="i" viewBox="0 0 24 24"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 20h14"/></svg>',
+  done: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+};
+
+/* ---------------- storage ---------------- */
+
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } },
+};
+
+// IndexedDB key/value stores, with a localStorage/memory fallback if IndexedDB isn't available.
+const DB = (() => {
+  let ready;
+  const open = () => ready || (ready = new Promise(res => {
+    let req;
+    try { req = indexedDB.open('rz-reader', 1); } catch (e) { return res(null); }
+    req.onupgradeneeded = () => {
+      for (const s of ['kv', 'chapters']) if (!req.result.objectStoreNames.contains(s)) req.result.createObjectStore(s);
+    };
+    req.onsuccess = () => res(req.result);
+    req.onerror = req.onblocked = () => res(null);
+  }));
+  const mem = { kv: new Map(), chapters: new Map() };
+  const fbKey = (s, k) => `rz.db.${s}.${k}`;
+  const fallback = {
+    get: (s, k) => mem[s].has(k) ? mem[s].get(k) : LS.get(fbKey(s, k), undefined),
+    put: (s, k, v) => { try { localStorage.setItem(fbKey(s, k), JSON.stringify(v)); } catch (e) { mem[s].set(k, v); } },
+    del: (s, k) => { mem[s].delete(k); try { localStorage.removeItem(fbKey(s, k)); } catch (e) { } },
+    keys: s => {
+      const out = new Set(mem[s].keys()), p = `rz.db.${s}.`;
+      try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith(p)) out.add(k.slice(p.length)); } } catch (e) { }
+      return [...out];
+    },
+    clear: s => { for (const k of fallback.keys(s)) fallback.del(s, k); },
+  };
+  async function run(store, mode, fn, fb) {
+    const db = await open();
+    if (!db) return fb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(store, mode);
+      const req = fn(tx.objectStore(store));
+      tx.oncomplete = () => res(req ? req.result : undefined);
+      tx.onerror = tx.onabort = () => rej(tx.error);
+    });
+  }
+  return {
+    get: (s, k) => run(s, 'readonly', st => st.get(k), () => fallback.get(s, k)),
+    put: (s, k, v) => run(s, 'readwrite', st => st.put(v, k), () => fallback.put(s, k, v)),
+    del: (s, k) => run(s, 'readwrite', st => st.delete(k), () => fallback.del(s, k)),
+    keys: s => run(s, 'readonly', st => st.getAllKeys(), () => fallback.keys(s)),
+    clear: s => run(s, 'readwrite', st => st.clear(), () => fallback.clear(s)),
+  };
+})();
+
+/* ---------------- state ---------------- */
+
+const S = {
+  arcs: [], arcsAt: 0,
+  bySlug: new Map(),   // slug -> { arc, ch, idx, n }
+  seq: [],             // every chapter of every arc, in reading order
+  saved: new Set(),    // slugs stored on this device
+  progress: LS.get('rz.progress', {}),   // slug -> { i, f, p, t, done }
+  settings: Object.assign({ theme: 'auto', font: 'serif', size: 19, spacing: 'normal', width: 'normal', autoSave: true }, LS.get('rz.settings', {})),
+  current: null,
+  ready: false,        // chapter text is on screen
+  drawerArc: null,
+  dl: {},              // arc num -> { done, total } while saving
+};
+
+const view = $('#view'), bar = $('#bar'), drawer = $('#drawer');
+
+function setArcs(arcs, at) {
+  S.arcs = arcs;
+  if (at) S.arcsAt = at;
+  S.bySlug = new Map();
+  S.seq = [];
+  for (const arc of arcs) arc.chapters.forEach((ch, idx) => {
+    const loc = { arc, ch, idx, n: S.seq.length };
+    if (!S.bySlug.has(ch.slug)) S.bySlug.set(ch.slug, loc);
+    S.seq.push(loc);
+  });
+  if (S.current) S.current = S.bySlug.get(S.current.ch.slug) || S.current;
+}
+const arcByNum = n => S.arcs.find(a => a.num === n);
+const neighbor = (loc, d) => (loc && S.seq[loc.n + d]) || null;
+function arcStats(arc) {
+  let read = 0, saved = 0;
+  for (const c of arc.chapters) { if (S.progress[c.slug] && S.progress[c.slug].done) read++; if (S.saved.has(c.slug)) saved++; }
+  return { total: arc.chapters.length, read, saved };
+}
+let saveArcsTimer = 0;
+const saveArcsSoon = () => { clearTimeout(saveArcsTimer); saveArcsTimer = setTimeout(() => DB.put('kv', 'arcs', { arcs: S.arcs, at: S.arcsAt }), 800); };
+
+/* ---------------- talking to the site ---------------- */
+
+async function api(path) {
+  const r = await fetch(API + path, { credentials: 'omit' });
+  if (!r.ok) throw new Error('The site answered ' + r.status);
+  return { data: await r.json(), pages: +(r.headers.get('X-WP-TotalPages') || 1) };
+}
+
+// Each arc has an index page on the site ("Arc 7: The Land of Wolves") listing its chapters in order.
+function parseToc(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const out = [], seen = new Set();
+  let section = '';
+  const walk = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT);
+  for (let el = walk.nextNode(); el; el = walk.nextNode()) {
+    if (/^H[1-6]$/.test(el.tagName)) {
+      const t = tidyText(el.textContent);
+      if (t) section = t;
+    } else if (el.tagName === 'A') {
+      const m = (el.getAttribute('href') || '').match(POST_RE);
+      if (!m) continue;
+      const slug = normSlug(m[1]);
+      if (seen.has(slug)) continue;
+      seen.add(slug);
+      const title = tidyText(el.textContent) || slug.replace(/-/g, ' ');
+      out.push({ slug, title, section, url: el.getAttribute('href') });
+    }
+  }
+  return out;
+}
+
+async function refreshArcs() {
+  const [{ data: pages }, { data: cats }] = await Promise.all([
+    api('/pages?per_page=100&_fields=id,title'),
+    api('/categories?per_page=100&_fields=id,slug'),
+  ]);
+  const found = [];
+  for (const p of pages) {
+    const m = decodeEntities(p.title.rendered).match(/^\s*Arc\s+(\d+)\s*[:：\-–—]\s*(.+)$/i);
+    if (m) found.push({ num: +m[1], name: m[2].trim(), page: p.id });
+  }
+  const aliases = new Map();
+  for (const a of S.arcs) for (const c of a.chapters) if (c.alias) aliases.set(c.slug, c.alias);
+  const arcs = await Promise.all(found.map(async a => {
+    const { data } = await api(`/pages/${a.page}?_fields=content`);
+    const chapters = parseToc(data.content.rendered);
+    for (const c of chapters) if (aliases.has(c.slug)) c.alias = aliases.get(c.slug);
+    const cat = cats.find(c => c.slug === `arc-${a.num}`);
+    return Object.assign(a, { cat: cat ? cat.id : null, chapters });
+  }));
+  // Arcs that are only PDFs or links elsewhere (e.g. Arc 4) have no chapter posts — leave them out.
+  const good = arcs.filter(a => a.chapters.length >= 3).sort((x, y) => x.num - y.num);
+  if (!good.length) throw new Error('No arcs found on the site');
+  const at = Date.now();
+  setArcs(good, at);
+  await DB.put('kv', 'arcs', { arcs: good, at });
+}
+
+async function loadArcs() {
+  const cached = await DB.get('kv', 'arcs');
+  if (cached && cached.arcs && cached.arcs.length) setArcs(cached.arcs, cached.at);
+  const stale = !S.arcs.length || Date.now() - S.arcsAt > ARCS_TTL;
+  if (!stale || !navigator.onLine) return;
+  const job = refreshArcs().then(onArcsChanged, e => { console.warn('Chapter list refresh failed', e); if (!S.arcs.length) throw e; });
+  if (!S.arcs.length) await job;
+}
+
+function setAlias(ch, postSlug) {
+  const a = normSlug(postSlug);
+  if (a !== ch.slug && ch.alias !== a) { ch.alias = a; saveArcsSoon(); }
+}
+
+// A few index links point at an old slug; fall back to matching on the chapter title.
+function matchPost(arc, post, pending) {
+  const s = normSlug(post.slug);
+  if (pending.has(s)) return pending.get(s);
+  for (const ch of arc.chapters) if (ch.slug === s || ch.alias === s) return pending.get(ch.slug) || null;
+  const key = titleKey(decodeEntities(post.title.rendered));
+  for (const ch of pending.values()) if (titleKey(ch.title) === key) { setAlias(ch, post.slug); return ch; }
+  return null;
+}
+
+async function fetchPost(arc, ch) {
+  const { data } = await api(`/posts?slug=${enc(ch.alias || ch.slug)}${POST_FIELDS}`);
+  if (data[0]) return data[0];
+  const words = ch.title.replace(/^[^:：]*[:：]\s*/, '');
+  const res = await api(`/posts?search=${enc(words)}&per_page=20${arc.cat ? '&categories=' + arc.cat : ''}${POST_FIELDS}`);
+  const key = titleKey(ch.title);
+  const post = res.data.find(p => titleKey(decodeEntities(p.title.rendered)) === key);
+  if (!post) throw new Error("Couldn't find this chapter on the site");
+  setAlias(ch, post.slug);
+  return post;
+}
+
+/* ---------------- cleaning chapter HTML ---------------- */
+
+const KEEP = new Set('P BR HR EM I B STRONG U S DEL SUP SUB SMALL BLOCKQUOTE UL OL LI H1 H2 H3 H4 H5 H6 A IMG FIGURE FIGCAPTION TABLE THEAD TBODY TR TD TH PRE CODE'.split(' '));
+const DROP = new Set('SCRIPT STYLE IFRAME FORM INPUT BUTTON SELECT TEXTAREA NOSCRIPT OBJECT EMBED SVG VIDEO AUDIO CANVAS LINK META TEMPLATE'.split(' '));
+const BLOCK = new Set('P BLOCKQUOTE UL OL H1 H2 H3 H4 H5 H6 HR FIGURE TABLE PRE'.split(' '));
+const JUNK = '.sharedaddy, .sd-sharing-enabled, .jp-relatedposts, .wpcnt, .jetpack-likes-widget-wrapper, [id^="jp-post-flair"]';
+const STYLE_WRAPS = [[/text-decoration[^;]*underline/, 'u'], [/font-style\s*:\s*italic/, 'i'], [/font-weight\s*:\s*(bold|[6-9]00)/, 'b']];
+const hasBlock = frag => [...frag.childNodes].some(c => c.nodeType === 1 && (BLOCK.has(c.tagName) || c.querySelector('p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, hr, figure, table, pre')));
+
+function cleanNode(n, doc) {
+  if (n.nodeType === 3) return doc.createTextNode(n.nodeValue);
+  if (n.nodeType !== 1 || DROP.has(n.tagName) || n.matches(JUNK)) return null;
+  const kids = doc.createDocumentFragment();
+  for (const c of [...n.childNodes]) { const k = cleanNode(c, doc); if (k) kids.appendChild(k); }
+  const style = (n.getAttribute('style') || '').toLowerCase();
+  if (!KEEP.has(n.tagName)) {
+    // span/div/font/mark/center etc.: unwrap, keeping underline/italic/bold that was done with inline styles
+    let out = kids;
+    if (out.childNodes.length && !hasBlock(out)) {
+      for (const [re, tag] of STYLE_WRAPS) if (re.test(style)) { const w = doc.createElement(tag); w.appendChild(out); out = w; }
+    }
+    return out;
+  }
+  const el = doc.createElement(n.tagName.toLowerCase());
+  if (n.tagName === 'A') {
+    const href = n.getAttribute('href') || '';
+    if (/^https?:\/\//i.test(href)) el.setAttribute('href', href);
+  } else if (n.tagName === 'IMG') {
+    const src = n.getAttribute('src') || '';
+    if (!/^https?:\/\//i.test(src)) return null;
+    el.setAttribute('src', src);
+    el.setAttribute('alt', n.getAttribute('alt') || '');
+    for (const a of ['width', 'height']) { const v = parseInt(n.getAttribute(a), 10); if (v > 0) el.setAttribute(a, v); }
+    el.setAttribute('loading', 'lazy');
+    el.setAttribute('decoding', 'async');
+    el.setAttribute('referrerpolicy', 'no-referrer');
+  }
+  const align = (n.getAttribute('align') || '').toLowerCase();
+  if (/text-align\s*:\s*center/.test(style) || align === 'center' || n.classList.contains('aligncenter') || n.classList.contains('has-text-align-center')) el.className = 'c';
+  else if (/text-align\s*:\s*right/.test(style) || align === 'right') el.className = 'r';
+  el.appendChild(kids);
+  return el;
+}
+
+function sanitize(html) {
+  const src = new DOMParser().parseFromString(html, 'text/html');
+  const doc = document.implementation.createHTMLDocument('');
+  const root = doc.createElement('div');
+  for (const n of [...src.body.childNodes]) { const c = cleanNode(n, doc); if (c) root.appendChild(c); }
+  // Every top-level child should be a block, so reading position can be tracked per paragraph.
+  let p = null;
+  for (const n of [...root.childNodes]) {
+    if (n.nodeType === 1 && BLOCK.has(n.tagName)) { p = null; continue; }
+    if (!p && ((n.nodeType === 3 && !n.nodeValue.trim()) || n.nodeName === 'BR')) { n.remove(); continue; }
+    if (!p) { p = doc.createElement('p'); root.insertBefore(p, n); }
+    p.appendChild(n);
+  }
+  let prevEmpty = true;
+  for (const el of [...root.children]) {
+    const txt = el.textContent.replace(/\s+/g, '');
+    if (!txt && el.tagName !== 'HR' && !el.querySelector('img')) {
+      if (prevEmpty) el.remove(); else { el.className = 'gap'; el.textContent = ''; prevEmpty = true; }
+      continue;
+    }
+    prevEmpty = false;
+    if (/^[※*＊◇◆○◯●・~〜=\-–—―]{3,}$/.test(txt) && /[※*＊◇◆○◯●]/.test(txt)) el.className = 'sep';
+  }
+  while (root.lastElementChild && root.lastElementChild.className === 'gap') root.lastElementChild.remove();
+  return root.innerHTML;
+}
+
+async function saveChapter(ch, post) {
+  const rec = {
+    slug: ch.slug, title: decodeEntities(post.title.rendered), html: sanitize(post.content.rendered),
+    link: post.link, date: post.date, modified: post.modified, at: Date.now(),
+  };
+  await DB.put('chapters', ch.slug, rec);
+  S.saved.add(ch.slug);
+  return rec;
+}
+
+/* ---------------- saving arcs offline ---------------- */
+
+const jobs = new Map();
+function downloadArc(arc) {
+  if (jobs.has(arc.num)) return jobs.get(arc.num);
+  const job = (async () => {
+    const pending = new Map(arc.chapters.filter(c => !S.saved.has(c.slug)).map(c => [c.slug, c]));
+    if (!pending.size) return;
+    const tick = () => setDl(arc, { done: arcStats(arc).saved, total: arc.chapters.length });
+    tick();
+    // Pull whole pages of the arc's category at once — far fewer requests than one per chapter.
+    if (arc.cat && pending.size > 6) {
+      for (let page = 1, pages = 1; page <= pages && pending.size; page++) {
+        const res = await api(`/posts?categories=${arc.cat}&per_page=20&page=${page}&orderby=date&order=asc${POST_FIELDS}`);
+        pages = res.pages;
+        for (const post of res.data) {
+          const ch = matchPost(arc, post, pending);
+          if (ch) { await saveChapter(ch, post); pending.delete(ch.slug); tick(); }
+        }
+      }
+    }
+    for (const ch of [...pending.values()]) {
+      try { await saveChapter(ch, await fetchPost(arc, ch)); pending.delete(ch.slug); tick(); }
+      catch (e) { console.warn('Could not save', ch.slug, e); }
+    }
+    if (pending.size) throw new Error(`${pending.size} chapters could not be saved`);
+  })().finally(() => { jobs.delete(arc.num); setDl(arc, null); refreshLists(); });
+  jobs.set(arc.num, job);
+  return job;
+}
+
+async function saveArc(arc, quiet) {
+  if (!arc) return;
+  if (!navigator.onLine) { if (!quiet) toast("You're offline. Connect to save chapters."); return; }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
+  try {
+    const before = arcStats(arc).saved;
+    await downloadArc(arc);
+    if (!quiet && arcStats(arc).saved > before) toast(`Arc ${arc.num} is saved for offline reading`);
+  } catch (e) {
+    console.warn(e);
+    if (!quiet) toast(`Couldn't save all of Arc ${arc.num}. Try again later.`);
+  }
+}
+
+async function prefetchFrom(loc) {
+  for (let k = 1, nx = neighbor(loc, 1); nx && k <= PREFETCH; k++, nx = neighbor(nx, 1)) {
+    if (S.saved.has(nx.ch.slug)) continue;
+    try { await saveChapter(nx.ch, await fetchPost(nx.arc, nx.ch)); } catch (e) { return; }
+  }
+}
+
+function backgroundSave(loc) {
+  if (!navigator.onLine) return;
+  prefetchFrom(loc).then(() => { if (S.settings.autoSave) return saveArc(loc.arc, true); }).then(refreshLists, () => { });
+}
+
+function dlLabel(arc) {
+  const d = S.dl[arc.num];
+  if (d) return `${ICON.down}<span>Saving ${d.done}/${d.total}…</span>`;
+  const st = arcStats(arc);
+  if (st.saved >= st.total) return `${ICON.done}<span>Saved offline</span>`;
+  return `${ICON.down}<span>Save offline${st.saved ? ` (${st.saved}/${st.total})` : ''}</span>`;
+}
+function dlButton(arc) {
+  const st = arcStats(arc), busy = !!S.dl[arc.num];
+  return `<button class="btn-dl${busy ? ' busy' : ''}" data-act="dl" data-arc="${arc.num}" data-dl-arc="${arc.num}"${busy || st.saved >= st.total ? ' disabled' : ''}>${dlLabel(arc)}</button>`;
+}
+function setDl(arc, state) {
+  if (state) S.dl[arc.num] = state; else delete S.dl[arc.num];
+  for (const b of document.querySelectorAll(`[data-dl-arc="${arc.num}"]`)) b.outerHTML = dlButton(arc);
+}
+
+/* ---------------- views ---------------- */
+
+const rtf = typeof Intl !== 'undefined' && Intl.RelativeTimeFormat ? new Intl.RelativeTimeFormat('en', { numeric: 'auto' }) : null;
+function ago(t) {
+  if (!t) return 'never';
+  const s = (t - Date.now()) / 1000;
+  for (const [u, n] of [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]]) {
+    if (Math.abs(s) >= n) return rtf ? rtf.format(Math.round(s / n), u) : `${Math.round(-s / n)} ${u}s ago`;
+  }
+  return 'just now';
+}
+
+function setBar(t1, t2) {
+  $('#barTitle .t1').textContent = t1;
+  $('#barTitle .t2').textContent = t2;
+}
+function setPct(p) {
+  $('#progress').style.transform = `scaleX(${p == null ? 0 : p})`;
+  $('#barPct').textContent = p == null ? '' : Math.round(p * 100) + '%';
+}
+
+// What "continue" means: the last chapter you had open, or the next one if you finished it.
+function continueTarget() {
+  const last = LS.get('rz.last', null);
+  const loc = last && S.bySlug.get(last.slug);
+  if (!loc) return null;
+  const pr = S.progress[loc.ch.slug];
+  if (pr && pr.done && (pr.p == null || pr.p >= 0.98)) {
+    const nx = neighbor(loc, 1);
+    if (nx) return { loc: nx, mode: 'next', pr: S.progress[nx.ch.slug] };
+  }
+  return { loc, mode: 'resume', pr };
+}
+
+function renderHome(keepScroll) {
+  S.current = null;
+  S.ready = false;
+  document.body.dataset.view = 'home';
+  document.title = 'Re:Zero Reader';
+  bar.classList.remove('hide');
+  setBar('', 'Re:Zero Reader');
+  setPct(null);
+  const t = continueTarget();
+  let cont = '';
+  if (t) {
+    const pct = t.pr ? Math.round((t.pr.p || 0) * 100) : 0;
+    cont = `<a class="card continue" href="#/read/${enc(t.loc.ch.slug)}">
+      <span class="eyebrow">${t.mode === 'next' ? 'Up next' : 'Continue reading'}</span>
+      <span class="cont-title">${esc(t.loc.ch.title)}</span>
+      <span class="cont-meta">Arc ${t.loc.arc.num} · ${esc(t.loc.arc.name)}${t.loc.ch.section ? ' · ' + esc(t.loc.ch.section) : ''}</span>
+      <span class="cont-row">
+        ${t.mode === 'resume' ? `<span class="meter"><i style="width:${pct}%"></i></span><span class="cont-pct">${pct}%${t.pr && t.pr.t ? ' · ' + ago(t.pr.t) : ''}</span>` : ''}
+        <span class="btn cont-go">${t.mode === 'next' ? 'Start' : 'Resume'} →</span>
+      </span>
+    </a>`;
+  }
+  const arcs = S.arcs.map(arc => {
+    const st = arcStats(arc);
+    return `<article class="card arc">
+      <a class="arc-main" href="#" data-act="chapters" data-arc="${arc.num}">
+        <span class="arc-num">Arc ${arc.num}</span>
+        <span class="arc-name">${esc(arc.name)}</span>
+        <span class="meter"><i style="width:${st.total ? (st.read / st.total) * 100 : 0}%"></i></span>
+        <span class="arc-meta">${st.read} of ${st.total} chapters read</span>
+      </a>
+      ${dlButton(arc)}
+    </article>`;
+  }).join('');
+  view.innerHTML = `<section class="home">
+    <header class="hero">
+      <h1>Re:Zero</h1>
+      <p class="lede">Web novel translations by <a href="${SITE}" target="_blank" rel="noopener">Witch Cult Translations</a>. This device remembers where you stopped, and saved chapters open without internet.</p>
+    </header>
+    ${cont}
+    <h2 class="section-label">Arcs</h2>
+    <div class="arcs">${arcs}</div>
+    <footer class="home-foot">
+      <span id="storage"></span>
+      <span>Chapter list checked ${ago(S.arcsAt)} · <button class="link" data-act="refresh">Check for new chapters</button></span>
+      ${S.saved.size ? '<button class="link danger" data-act="clear">Remove saved chapters from this device</button>' : ''}
+      <span>Re:Zero belongs to Tappei Nagatsuki. Translations © their translators. <a href="${SITE}/support-us/" target="_blank" rel="noopener">Support the translators</a></span>
+    </footer>
+  </section>`;
+  if (!keepScroll) window.scrollTo(0, 0);
+  showStorage();
+}
+
+function renderMessage(title, body, actions = '') {
+  S.current = null;
+  document.body.dataset.view = 'home';
+  setBar('', 'Re:Zero Reader');
+  setPct(null);
+  view.innerHTML = `<section class="home"><div class="notice"><b>${title}</b><p>${body}</p>${actions}</div></section>`;
+}
+
+async function showStorage() {
+  const el = $('#storage');
+  if (!el) return;
+  let txt = `${S.saved.size} chapter${S.saved.size === 1 ? '' : 's'} saved on this device`;
+  try { const e = await navigator.storage.estimate(); if (e.usage) txt += ` · ${(e.usage / 1048576).toFixed(1)} MB used`; } catch (e) { }
+  el.textContent = txt;
+}
+
+function splitTitle(title) {
+  const m = title.match(/^((?:chapter|ch\.?)\s*[\d.]+[a-z]?(?:\s*\(part[^)]*\))?|interlude[^:：]*|prologue|epilogue|side story[^:：]*)\s*[:：\-–—]\s*(.+)$/i);
+  return m ? [m[1], m[2]] : ['', title];
+}
+
+function chapterNav(loc) {
+  const prev = neighbor(loc, -1), next = neighbor(loc, 1);
+  return `<nav class="chapnav">
+    ${prev ? `<a class="nav-btn prev" href="#/read/${enc(prev.ch.slug)}"><small>${prev.arc !== loc.arc ? 'Previous arc' : 'Previous'}</small><span>${esc(prev.ch.title)}</span></a>` : ''}
+    ${next ? `<a class="nav-btn next" href="#/read/${enc(next.ch.slug)}"><small>${next.arc !== loc.arc ? `Next · Arc ${next.arc.num}` : 'Next'}</small><span>${esc(next.ch.title)}</span></a>` : ''}
+  </nav>
+  <p class="source">Translated by Witch Cult Translations · <a href="${esc(loc.ch.url)}" target="_blank" rel="noopener">Open on the website</a></p>`;
+}
+
+let renderToken = 0;
+async function showChapter(slug) {
+  const loc = S.bySlug.get(slug);
+  if (!loc) return renderMessage("That chapter isn't in the list", 'It may have been renamed on the site.', '<a class="btn" href="#/">Back to library</a>');
+  const tok = ++renderToken;
+  S.current = loc;
+  S.ready = false;
+  document.body.dataset.view = 'read';
+  bar.classList.remove('hide');
+  const [kicker, name] = splitTitle(loc.ch.title);
+  setBar(`Arc ${loc.arc.num}${loc.ch.section ? ' · ' + loc.ch.section : ''}`, loc.ch.title);
+  document.title = `${loc.ch.title} · Arc ${loc.arc.num}`;
+  setPct(0);
+  view.innerHTML = `<article class="chapter">
+    <header class="ch-head">
+      <p class="eyebrow">Arc ${loc.arc.num} · ${esc(loc.arc.name)}${loc.ch.section ? ' · ' + esc(loc.ch.section) : ''}</p>
+      ${kicker ? `<p class="kicker">${esc(kicker)}</p>` : ''}
+      <h1>${esc(name)}</h1>
+    </header>
+    <div class="content" id="content"><p class="status">Loading…</p></div>
+    <div id="chapEnd">${chapterNav(loc)}</div>
+  </article>`;
+  window.scrollTo(0, 0);
+  LS.set('rz.last', { slug, t: Date.now() });
+
+  let rec = await DB.get('chapters', slug);
+  if (tok !== renderToken) return;
+  const content = $('#content');
+  if (!rec) {
+    if (!navigator.onLine) {
+      content.innerHTML = `<div class="notice"><b>This chapter isn't saved on this device yet</b>
+        <p>Connect to the internet to load it. To read without internet later, use “Save offline” on the arc while you're online.</p>
+        <button class="btn" data-act="retry">Try again</button></div>`;
+      return;
+    }
+    try { rec = await saveChapter(loc.ch, await fetchPost(loc.arc, loc.ch)); }
+    catch (e) {
+      if (tok !== renderToken) return;
+      content.innerHTML = `<div class="notice"><b>Couldn't load this chapter</b><p>${esc(e.message || e)}</p>
+        <button class="btn" data-act="retry">Try again</button> <a class="btn ghost" href="${esc(loc.ch.url)}" target="_blank" rel="noopener">Open on the website</a></div>`;
+      return;
+    }
+    if (tok !== renderToken) return;
+  }
+  const tpl = document.createElement('template');
+  tpl.innerHTML = rec.html;
+  decorate(tpl.content);
+  content.replaceChildren(tpl.content);
+  S.ready = true;
+  restorePosition(slug, true);
+  backgroundSave(loc);
+}
+
+function decorate(root) {
+  for (const a of root.querySelectorAll('a[href]')) {
+    const m = a.getAttribute('href').match(POST_RE);
+    const loc = m && S.bySlug.get(normSlug(m[1]));
+    if (loc) a.setAttribute('href', '#/read/' + enc(loc.ch.slug));
+    else { a.target = '_blank'; a.rel = 'noopener'; }
+  }
+  const offline = !navigator.onLine;
+  for (const img of root.querySelectorAll('img')) {
+    if (offline) img.classList.add('gone');
+    else img.addEventListener('error', () => img.classList.add('gone'), { once: true });
+  }
+}
+
+/* ---------------- reading position ---------------- */
+
+// Position is stored as "paragraph #i, fraction f into it", so it survives font and window size changes.
+function findAnchor() {
+  const content = $('#content');
+  const els = content ? content.children : [];
+  if (!els.length) return null;
+  let lo = 0, hi = els.length - 1, ans = els.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (els[mid].getBoundingClientRect().bottom > ANCHOR_Y) { ans = mid; hi = mid - 1; } else lo = mid + 1;
+  }
+  const r = els[ans].getBoundingClientRect();
+  return { i: ans, f: r.height ? clamp((ANCHOR_Y - r.top) / r.height, 0, 1) : 0 };
+}
+function scrollToAnchor(a) {
+  const content = $('#content');
+  const el = content && content.children[a.i];
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  window.scrollTo(0, Math.max(0, window.scrollY + r.top + r.height * a.f - ANCHOR_Y));
+}
+function chapterPct() {
+  const content = $('#content');
+  if (!content) return 0;
+  const r = content.getBoundingClientRect();
+  const span = r.height - (innerHeight - ANCHOR_Y);
+  return span <= 0 ? 1 : clamp((ANCHOR_Y - r.top) / span, 0, 1);
+}
+
+let guard = null;   // while set, the position we just restored is re-applied as images load
+function restorePosition(slug, arm) {
+  const pr = S.progress[slug];
+  if (pr && pr.i != null && !(pr.done && pr.p >= 0.98)) scrollToAnchor(pr);
+  else window.scrollTo(0, 0);
+  setPct(chapterPct());
+  if (arm) {
+    if (guard) guard.off();
+    const g = guard = { slug };
+    const cancel = () => { if (guard === g) guard = null; g.off(); };
+    g.off = () => { for (const ev of ['wheel', 'touchstart', 'keydown', 'mousedown']) removeEventListener(ev, cancel, true); };
+    for (const ev of ['wheel', 'touchstart', 'keydown', 'mousedown']) addEventListener(ev, cancel, { capture: true, passive: true });
+    setTimeout(cancel, 2500);
+  }
+}
+
+function savePos() {
+  if (!S.current || !S.ready || guard) return;
+  const a = findAnchor();
+  if (!a) return;
+  const slug = S.current.ch.slug, p = chapterPct(), prev = S.progress[slug] || {};
+  S.progress[slug] = { i: a.i, f: +a.f.toFixed(3), p: +p.toFixed(4), t: Date.now(), done: !!prev.done || p >= 0.995 };
+  LS.set('rz.progress', S.progress);
+  LS.set('rz.last', { slug, t: Date.now() });
+  if (!prev.done && S.progress[slug].done && document.body.classList.contains('drawer-open')) renderDrawer();
+}
+
+let lastY = 0, ticking = false, saveTimer = 0;
+addEventListener('scroll', () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    ticking = false;
+    const y = window.scrollY;
+    if (document.body.dataset.view === 'read') {
+      if (y > lastY + 8 && y > 140 && !document.body.classList.contains('settings-open')) bar.classList.add('hide');
+      else if (y < lastY - 8 || y < 60) bar.classList.remove('hide');
+      if (S.ready) setPct(chapterPct());
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(savePos, 350);
+    }
+    lastY = y;
+  });
+}, { passive: true });
+
+view.addEventListener('load', e => {
+  if (e.target.tagName === 'IMG' && guard && S.current && guard.slug === S.current.ch.slug) restorePosition(guard.slug, false);
+}, true);
+addEventListener('pagehide', savePos);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') savePos(); });
+
+/* ---------------- chapter drawer ---------------- */
+
+const drList = $('#drList'), drSearch = $('#drSearch');
+
+function renderDrawer(scroll) {
+  if (!S.arcs.length) { drList.innerHTML = '<p class="status">The chapter list hasn\'t loaded yet.</p>'; return; }
+  const lastLoc = S.bySlug.get((LS.get('rz.last', null) || {}).slug);
+  const arc = arcByNum(S.drawerArc) || (S.current && S.current.arc) || (lastLoc && lastLoc.arc) || S.arcs[S.arcs.length - 1];
+  S.drawerArc = arc.num;
+  $('#drChips').innerHTML = S.arcs.map(a => `<button class="chip${a === arc ? ' on' : ''}" data-act="arc" data-arc="${a.num}">Arc ${a.num}</button>`).join('');
+  const st = arcStats(arc);
+  $('#drInfo').innerHTML = `<div><b>${esc(arc.name)}</b><span>${st.total} chapters · ${st.read} read</span></div>${dlButton(arc)}`;
+  const curSlug = S.current && S.current.ch.slug;
+  let html = '', sec = null;
+  for (const ch of arc.chapters) {
+    if (ch.section !== sec) {
+      if (sec !== null) html += '</div>';
+      sec = ch.section;
+      html += `<div class="sec">${sec ? `<h3>${esc(sec)}</h3>` : ''}`;
+    }
+    const pr = S.progress[ch.slug];
+    const done = !!(pr && pr.done);
+    const pct = pr && !done && pr.p > 0.01 ? Math.round(pr.p * 100) + '%' : '';
+    html += `<a class="ch-item${ch.slug === curSlug ? ' cur' : ''}${done ? ' done' : ''}" href="#/read/${enc(ch.slug)}" data-q="${esc(ch.title.toLowerCase())}">
+      <span class="ch-dot">${done ? ICON.check : ''}</span><span class="ch-name">${esc(ch.title)}</span>
+      <span class="ch-meta">${pct}${S.saved.has(ch.slug) ? '' : ICON.cloud}</span></a>`;
+  }
+  if (sec !== null) html += '</div>';
+  const keep = drList.scrollTop;
+  drList.innerHTML = html;
+  filterDrawer();
+  if (scroll) {
+    const target = drList.querySelector('.ch-item.cur') || drList.querySelector('.ch-item:not(.done)');
+    drList.scrollTop = target ? target.offsetTop - drList.clientHeight / 2 + target.offsetHeight / 2 : 0;
+  } else drList.scrollTop = keep;
+}
+function filterDrawer() {
+  const q = drSearch.value.trim().toLowerCase();
+  for (const a of drList.querySelectorAll('.ch-item')) a.hidden = !!q && !a.dataset.q.includes(q);
+  for (const s of drList.querySelectorAll('.sec')) s.hidden = !!q && !s.querySelector('.ch-item:not([hidden])');
+}
+drSearch.addEventListener('input', filterDrawer);
+
+function openDrawer() {
+  closeSettings();
+  document.body.classList.add('drawer-open');
+  drawer.setAttribute('aria-hidden', 'false');
+  bar.classList.remove('hide');
+  renderDrawer(true);
+}
+function closeDrawer() {
+  document.body.classList.remove('drawer-open');
+  drawer.setAttribute('aria-hidden', 'true');
+  if (drSearch.value) { drSearch.value = ''; filterDrawer(); }
+}
+
+/* ---------------- display settings ---------------- */
+
+const SPACING = { tight: 1.5, normal: 1.7, loose: 1.95 };
+const WIDTH = { narrow: '560px', normal: '680px', wide: '840px' };
+const mqDark = matchMedia('(prefers-color-scheme: dark)');
+
+function applyTheme() {
+  const t = S.settings.theme === 'auto' ? (mqDark.matches ? 'dark' : 'light') : S.settings.theme;
+  document.documentElement.dataset.theme = t;
+  $('meta[name="theme-color"]').setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#faf8f4');
+}
+function applySettings() {
+  const s = S.settings, root = document.documentElement.style;
+  root.setProperty('--fs', s.size + 'px');
+  root.setProperty('--lh', SPACING[s.spacing] || 1.7);
+  root.setProperty('--measure', WIDTH[s.width] || '680px');
+  root.setProperty('--font', s.font === 'sans' ? 'var(--sans)' : 'var(--serif)');
+  applyTheme();
+  for (const seg of document.querySelectorAll('#settings .seg')) {
+    for (const b of seg.children) b.classList.toggle('on', String(s[seg.dataset.key]) === b.dataset.val);
+  }
+  $('#sizeOut').textContent = s.size;
+  $('#autoSave').checked = !!s.autoSave;
+}
+function changeSetting(fn) {
+  const a = S.ready ? findAnchor() : null;
+  fn(S.settings);
+  LS.set('rz.settings', S.settings);
+  applySettings();
+  if (a) scrollToAnchor(a);
+}
+if (mqDark.addEventListener) mqDark.addEventListener('change', applyTheme); else if (mqDark.addListener) mqDark.addListener(applyTheme);
+
+$('#settings').addEventListener('click', e => {
+  const b = e.target.closest('.seg button');
+  if (b) changeSetting(s => { s[b.parentElement.dataset.key] = b.dataset.val; });
+});
+$('#autoSave').addEventListener('change', e => {
+  changeSetting(s => { s.autoSave = e.target.checked; });
+  if (e.target.checked && S.current) saveArc(S.current.arc, true).then(refreshLists);
+});
+
+function toggleSettings() {
+  if (document.body.classList.contains('settings-open')) return closeSettings();
+  closeDrawer();
+  bar.classList.remove('hide');
+  document.body.classList.add('settings-open');
+}
+function closeSettings() { document.body.classList.remove('settings-open'); }
+function closeAll() { closeDrawer(); closeSettings(); }
+
+/* ---------------- misc UI ---------------- */
+
+let toastTimer = 0;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function refreshLists() {
+  if (document.body.classList.contains('drawer-open')) renderDrawer();
+  if (document.body.dataset.view === 'home' && S.arcs.length) renderHome(true);
+}
+function onArcsChanged() {
+  refreshLists();
+  if (S.current) { const end = $('#chapEnd'); if (end) end.innerHTML = chapterNav(S.current); }
+}
+
+function updateOnline() { $('#offline').hidden = navigator.onLine; }
+addEventListener('online', () => {
+  updateOnline();
+  if (S.current && !S.ready) showChapter(S.current.ch.slug);
+});
+addEventListener('offline', updateOnline);
+
+function go(d) {
+  const nx = neighbor(S.current, d);
+  if (nx) location.hash = '#/read/' + enc(nx.ch.slug);
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'menu') { document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer(); }
+  else if (act === 'close') closeAll();
+  else if (act === 'home') { closeAll(); location.hash = '#/'; }
+  else if (act === 'settings') toggleSettings();
+  else if (act === 'chapters') { e.preventDefault(); S.drawerArc = +t.dataset.arc; openDrawer(); }
+  else if (act === 'arc') { S.drawerArc = +t.dataset.arc; drSearch.value = ''; renderDrawer(true); }
+  else if (act === 'dl') saveArc(arcByNum(+t.dataset.arc)).then(refreshLists);
+  else if (act === 'retry') route();
+  else if (act === 'size') changeSetting(s => { s.size = clamp(s.size + +t.dataset.d, 14, 30); });
+  else if (act === 'refresh') {
+    if (!navigator.onLine) return toast("You're offline right now.");
+    toast('Checking the site for new chapters…');
+    refreshArcs().then(() => { onArcsChanged(); toast('Chapter list is up to date'); }, () => toast("Couldn't reach the site"));
+  } else if (act === 'clear') {
+    if (!confirm('Remove all saved chapter text from this device? Your reading progress is kept.')) return;
+    DB.clear('chapters').then(() => { S.saved.clear(); refreshLists(); toast('Saved chapters removed'); });
+  }
+});
+
+// On touch screens, tapping the page shows/hides the top bar.
+view.addEventListener('click', e => {
+  if (document.body.dataset.view !== 'read' || !matchMedia('(hover: none)').matches) return;
+  if (e.target.closest('a, button, input, label')) return;
+  if (String(getSelection() || '')) return;
+  bar.classList.toggle('hide');
+});
+
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest('input, textarea')) return;
+  if (e.key === 'Escape') closeAll();
+  else if (document.body.dataset.view === 'read' && e.key === 'ArrowRight') go(1);
+  else if (document.body.dataset.view === 'read' && e.key === 'ArrowLeft') go(-1);
+});
+
+/* ---------------- routing & startup ---------------- */
+
+function route() {
+  savePos();
+  closeAll();
+  const m = location.hash.match(/^#\/read\/(.+)$/);
+  if (m) return showChapter(normSlug(m[1]));
+  if (location.hash.startsWith('#/')) return renderHome();
+  // Fresh launch: go straight back to where you were.
+  const t = continueTarget();
+  if (t) location.replace('#/read/' + enc(t.loc.ch.slug));
+  else renderHome();
+}
+
+async function init() {
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  applySettings();
+  updateOnline();
+  try { S.saved = new Set(await DB.keys('chapters')); } catch (e) { }
+  try { await loadArcs(); }
+  catch (e) {
+    return renderMessage(
+      navigator.onLine ? "Couldn't reach Witch Cult Translations" : 'Connect to the internet once',
+      navigator.onLine ? esc(e.message || e) : 'The first time, the reader needs internet to load the list of arcs and chapters. After that it works offline.',
+      '<button class="btn" data-act="retry-init">Try again</button>');
+  }
+  addEventListener('hashchange', route);
+  route();
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-act="retry-init"]')) location.reload(); });
+
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker not registered', e));
+}
+
+init();
+})();
+</script>
+</body>
+</html>
